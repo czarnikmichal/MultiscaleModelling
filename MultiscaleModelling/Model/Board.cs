@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,9 +9,11 @@ namespace MultiscaleModelling.Model
 {
     class Board
     {
-        private static int _sizeX = 0;
-        private static int _sizeY = 0;
+        private static Random rand = new Random();
+        private static int _sizeX = 400;
+        private static int _sizeY = 400;
         private static Dictionary<Coordinate, Cell> _board = null;
+        private static Dictionary<int, Pen> _colors = new Dictionary<int, Pen>();
         private static int _numberOfGroups = 0;
         public int NumberOfGroups
         {
@@ -21,6 +24,18 @@ namespace MultiscaleModelling.Model
             private set
             {
                 _numberOfGroups = value;
+            }
+        }
+
+        public Dictionary<int, Pen> Colors
+        {
+            get
+            {
+                return _colors;
+            }
+            private set
+            {
+                _colors = value;
             }
         }
 
@@ -60,11 +75,31 @@ namespace MultiscaleModelling.Model
         {
             if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY)
                 throw new IndexOutOfRangeException();
+            return AddToBoard(c, coord, false);
+        }
+
+        public bool AddToBoard(Cell c, Coordinate coord, bool periodic)
+        {
+            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY)
+            {
+                if (!periodic)
+                {
+                    return false;
+                }
+                coord.CoordinateX = coord.CoordinateX % _sizeX;
+                coord.CoordinateY = coord.CoordinateY % _sizeY;
+            }
             if (_board.ContainsKey(coord))
                 return false;
             _board.Add(coord, c);
             if (c.GroupID > NumberOfGroups)
+            {
+                int r = rand.Next() % 255;
+                int g = rand.Next() % 255;
+                int b = rand.Next() % 255;
                 NumberOfGroups = c.GroupID;
+                _colors.Add(c.GroupID, new Pen(Color.FromArgb(r,g,b)));
+            }
             return true;
         }
 
