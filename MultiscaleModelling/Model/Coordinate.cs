@@ -37,5 +37,25 @@ namespace MultiscaleModelling.Model
                 _coordinateY = value;
             }
         }
+
+        public override bool Equals(Object o)
+        {
+            Coordinate c2 = (Coordinate)o;
+            if (this.CoordinateX != c2.CoordinateX)
+                return false;
+            if (this.CoordinateY != c2.CoordinateY)
+                return false;
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            const int prime = 31;
+            int result = 1;
+            result = prime * result + ((this.CoordinateX == -1) ? 0 : this.CoordinateX);
+            result = prime * result + ((this.CoordinateY == -1) ? 0 : this.CoordinateY);
+            return result;
+        }
     }
+
 }

@@ -9,31 +9,63 @@ namespace MultiscaleModelling.Utilities
 {
     static class CAMethods
     {
-        static Random rand = new Random();
-        public static Cell [,] CreteDiemsnions(int sizeX, int sizeY)
+        public enum Methods {Neumann, Hexagonal, Pentagonal, Moore };
+        private static Random rand = new Random();
+        private static Board board = new Board();
+
+        public static void CreateRandomCells(int numberOfCells, int maxX, int maxY)
         {
-            var a = new Cell[sizeX, sizeY];
-            return a;
+            for(int i = board.NumberOfGroups; i<numberOfCells+board.NumberOfGroups;)
+            {
+                Coordinate coord = new Coordinate(rand.Next() % board.SizeX, rand.Next() % board.SizeY);
+                Cell c1 = new Cell(i);
+                if (board.AddToBoard(c1, coord))
+                    i++;
+            }             
         }
 
-        public static void InitialPopulate(ref Cell[,] cA, ref List<Coordinate> cL, int numberOfCellGroups)
+        public static void CountNextStep(Methods m, bool periodic)
         {
-            int sizeX = cA.GetLength(0);
-            int sizeY = cA.GetLength(1);
-            if (numberOfCellGroups < sizeX * sizeY)
+            Dictionary<Coordinate, Cell> tempDict = board.GetBoard();
+            foreach(Coordinate c1 in tempDict.Keys)
             {
-                for (int i = 0; i < numberOfCellGroups; i++)
+                switch (m)
                 {
-                    Coordinate c = new Coordinate(rand.Next(0, sizeX), rand.Next(0, sizeY));
-                    if (cL.Contains(c))
-                    {
-                        i--;
-                        continue;
-                    }
-                    cL.Add(c);
-                    cA[c.CoordinateX, c.CoordinateY] = new Cell(i);
+                    case Methods.Neumann:
+                        CountNeumann(tempDict, periodic);
+                        break;
+                    case Methods.Moore:
+                        CountMoore(tempDict, periodic);
+                        break;
+                    case Methods.Pentagonal:
+                        CountPentagonal(tempDict, periodic);
+                        break;
+                    case Methods.Hexagonal:
+                        CountHexagonal(tempDict, periodic);
+                        break;
+
                 }
             }
+        }
+
+        private static void CountNeumann(Dictionary<Coordinate, Cell> tempDict, bool periodic)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void CountMoore(Dictionary<Coordinate, Cell> tempDict, bool periodic)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void CountPentagonal(Dictionary<Coordinate, Cell> tempDict, bool periodic)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void CountHexagonal(Dictionary<Coordinate, Cell> tempDict, bool periodic)
+        {
+            throw new NotImplementedException();
         }
     }
 }
