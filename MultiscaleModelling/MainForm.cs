@@ -76,16 +76,20 @@ namespace MultiscaleModelling
 
         private void panel_Click(object sender, EventArgs e)
         {
+            if (run)
+            {
+                run = false;
+                ShowError("You must pause before adding new cells");
+                return;
+            }
             MouseEventArgs args = (MouseEventArgs)e;
             Coordinate coord = new Coordinate(args.X, args.Y);
             Cell cell = new Cell(board.NumberOfGroups+1);
             board.AddToBoard(cell, coord);
-            g = g ?? panel.CreateGraphics();
-            lock (g)
-            {
-                g.DrawCell(cell, coord);
-            }
+            g = g ?? panel.CreateGraphics();        
+            g.DrawCell(board.GetBoard()[coord], coord);
         }
+        
 
         private void generate_Click(object sender, EventArgs e)
         {
