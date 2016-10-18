@@ -73,35 +73,54 @@ namespace MultiscaleModelling.Model
 
         public bool AddToBoard(Cell c, Coordinate coord)
         {
-            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY)
+            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY || coord.CoordinateY < 0 || coord.CoordinateX < 0)
                 throw new IndexOutOfRangeException();
             return AddToBoard(c, coord, false);
         }
 
         public bool AddToBoard(Cell c, Coordinate coord, bool periodic)
         {
-            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY)
+            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY || coord.CoordinateY < 0 || coord.CoordinateX < 0)
             {
                 if (!periodic)
                 {
                     return false;
                 }
-                coord.CoordinateX = coord.CoordinateX % _sizeX;
-                coord.CoordinateY = coord.CoordinateY % _sizeY;
+                coord.CoordinateX = (coord.CoordinateX + _sizeX) % _sizeX;
+                coord.CoordinateY = (coord.CoordinateY + _sizeY) % _sizeY;
             }
             if (_board.ContainsKey(coord))
                 return false;
             _board.Add(coord, c);
             if (c.GroupID > NumberOfGroups)
             {
-                int r = rand.Next() % 255;
-                int g = rand.Next() % 255;
-                int b = rand.Next() % 255;
+                int r = (rand.Next() % 254) +1;
+                int g = (rand.Next() % 254) +1;
+                int b = (rand.Next() % 254) +1;
                 NumberOfGroups = c.GroupID;
                 _colors.Add(c.GroupID, new Pen(Color.FromArgb(r,g,b)));
             }
             return true;
         }
+        public bool AddIOnclusionToBoard(Cell c, Coordinate coord, bool periodic)
+        {
+            if (coord.CoordinateX >= _sizeX || coord.CoordinateY >= _sizeY || coord.CoordinateY < 0 || coord.CoordinateX < 0)
+            {
+                if (!periodic)
+                {
+                    return false;
+                }
+                coord.CoordinateX = (coord.CoordinateX + _sizeX) % _sizeX;
+                coord.CoordinateY = (coord.CoordinateY + _sizeY) % _sizeY;
+            }
+            if (_board.ContainsKey(coord))
+                _board[coord] = c;
+            else
+                _board.Add(coord, c);
+            if(!_colors.ContainsKey(-1))
+                _colors.Add(-1, Pens.Black);
 
+            return true;
+        }
     }
 }

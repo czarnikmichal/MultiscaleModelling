@@ -29,8 +29,7 @@ namespace MultiscaleModelling.Utilities
 
         public static void CountNextStep(Methods m, bool periodic)
         {
-            List<Coordinate> keyList = board.GetBoard().Where(x => !x.Value.IsCounted).Select(x => x.Key).ToList();
-            var a = board.GetBoard().Where(x => (x.Key.CoordinateX > board.SizeX || x.Key.CoordinateY > board.SizeY));
+            List<Coordinate> keyList = board.GetBoard().Where(x => (!x.Value.IsCounted && x.Value.GroupID!=-1)).Select(x => x.Key).ToList();
             foreach (Coordinate c1 in keyList)
             {
                 switch (m)

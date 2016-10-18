@@ -37,6 +37,11 @@ namespace MultiscaleModelling.Model
         {
             _groupId = value;
         }
+
+        public Cell()
+        {
+
+        }
         private int _groupId=-1;
         public int GroupID
         {
