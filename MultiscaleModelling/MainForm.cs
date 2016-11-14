@@ -10,19 +10,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static MultiscaleModelling.Utilities.CAMethods;
 
 namespace MultiscaleModelling
 {
     public partial class MainForm : Form
     {
-        private string [] Methods = { @"von Neumann", @"Moore", @"Random Hexagonal", @"Random Pentagonal" };
-        private Board board = new Board();
+        private string [] Methods = { @"von Neumann", @"Moore", @"Random Hexagonal", @"Random Pentagonal", @"Moore Rules" };
         private bool run = false;
+        private bool finish = false;
         private Graphics g=null;
+        private Drawer drawer;
+        CAMethods1 cM;
         public MainForm()
         {
             InitializeComponent();
+            drawer = new Drawer(panel.Width, panel.Height);
+            cM = new CAMethods1();
             methods.DropDownStyle = ComboBoxStyle.DropDownList;
             methods.DataSource = Methods;
             panelX.Text = panel.Width.ToString();
@@ -34,8 +37,8 @@ namespace MultiscaleModelling
             Thread.Sleep(200);
             g = g ?? panel.CreateGraphics(); 
             g.Clear(Color.White);
-            board.GetBoard().Clear();
-            board.Colors.Clear();
+            cM.ClearBoard();
+            drawer.MakeItWhite();
             methods.Enabled = true;
             periodic.Enabled = true;
             textBox1.Enabled = true;
@@ -50,16 +53,22 @@ namespace MultiscaleModelling
 
         private async void start_Click(object sender, EventArgs e)
         {
-            if (board.GetBoard().Count == 0)
+            if (cM.board.NewlyAdded.Count == 0 && !finish)
             {
                 ShowError("You don't have any Cells added!");
+                return;
+            }
+            if (cM.board.NewlyAdded.Count == 0 && finish)
+            {
+                ShowError("You have to clean board by clicking stop!");
                 return;
             }
             methods.Enabled = false;
             periodic.Enabled = false;
             textBox1.Enabled = false;
-            Methods m = methods.Text.TranslateComboBox();
-            await Task.Run(() => StartCounting(m));
+            cM.BoundaryMethod = cM.TranslateComboBox(methods.Text);
+            await Task.Run(() => StartCounting());
+            
         }
 
         private void ShowError(string message)
@@ -67,21 +76,28 @@ namespace MultiscaleModelling
             MessageBox.Show(message, "Error", MessageBoxButtons.OK);
         }
 
-        private void StartCounting(CAMethods.Methods m)
+        private void StartCounting()
         {
+            g = g ?? panel.CreateGraphics();
             run = true;
             while (run)
             {
-                CAMethods.CountNextStep(m, periodic.Checked);
-                g = g ?? panel.CreateGraphics();
-                g.DrawBoard();
-                if (board.GetBoard().Count > board.SizeX * board.SizeY)
-                    run = false;
+                if (cM.board.NewlyAdded.Count == 0)
+                {
+                    if (cM.ShouldEnd())
+                    {
+                        run = false;
+                        finish = true;
+                    }
+                }
+                cM.Count();
+                drawer.DrawCells(g, cM.board);
             }
         }
 
         private void panel_Click(object sender, EventArgs e)
         {
+            g = g ?? panel.CreateGraphics();
             if (run)
             {
                 run = false;
@@ -89,80 +105,42 @@ namespace MultiscaleModelling
                 return;
             }
             MouseEventArgs args = (MouseEventArgs)e;
-            Coordinate coord = new Coordinate(args.X, args.Y);
             if (args.Button == MouseButtons.Left)
             {
-                Cell cell = new Cell(board.NumberOfGroups + 1);
-                board.AddToBoard(cell, coord);
-                g = g ?? panel.CreateGraphics();
-                g.DrawCell(board.GetBoard()[coord], coord);
+                cM.AddNewCell(args.X, args.Y);
+                drawer.DrawCells(g, cM.board);
+
             }
             else
             {
-                DrawNewInclusion(coord);
+                DrawNewInclusion(args.X, args.Y);
+                drawer.DrawBoard(g, cM.board);
             }
         }
 
-        private void DrawNewInclusion(Coordinate coord)
+        private void DrawNewInclusion(int xCoord, int yCoord)
         {
             if (squareIncl.Checked)
             {
                 int x = ShowErrorForParsing("for length of square", textBox2);
                 int y = ShowErrorForParsing("for height of square", textBox3);
-                CreateSquareInclusion(coord, x, y);
+                cM.CreateRectangleInclusion(xCoord, yCoord, x, y);
             }
             else
             {
                 int radius = ShowErrorForParsing("for radius of circle", textBox2);
-                CreateCirlceInclusion(coord, radius);
+                cM.CreateCircularInclusion(xCoord,yCoord, radius);
             }
-        }
-
-        private void CreateCirlceInclusion(Coordinate coord, int radius)
-        {
-            for (int x = coord.CoordinateX - radius; x <= coord.CoordinateX; x++)
-            {
-                for (int y = coord.CoordinateY - radius; y <= coord.CoordinateY; y++)
-                {
-                    if ((x - coord.CoordinateX) * (x - coord.CoordinateX) + (y - coord.CoordinateY) * (y - coord.CoordinateY) <= radius * radius)
-                    {
-                        int x2 = coord.CoordinateX - (x - coord.CoordinateX);
-                        int y2 = coord.CoordinateY - (y - coord.CoordinateY);
-                        board.AddIOnclusionToBoard(new Cell(), new Coordinate(x, y), periodic.Checked);
-                        board.AddIOnclusionToBoard(new Cell(), new Coordinate(x2, y2), periodic.Checked);
-                        board.AddIOnclusionToBoard(new Cell(), new Coordinate(x, y2), periodic.Checked);
-                        board.AddIOnclusionToBoard(new Cell(), new Coordinate(x2, y), periodic.Checked);
-                    }
-                }
-            }
-            g = g ?? panel.CreateGraphics();
-            g.DrawBoard();
-        }
-
-        private void CreateSquareInclusion(Coordinate coord, int x, int y)
-        {
-            for (int i = coord.CoordinateX - x/2; i < coord.CoordinateX + x/2; i++)
-            {
-                for (int j = coord.CoordinateY - y/2; j < coord.CoordinateY/2 + y; j++)
-                {
-                    board.AddIOnclusionToBoard(new Cell(), new Coordinate(i, j), periodic.Checked);
-                }
-            }
-            g = g ?? panel.CreateGraphics();
-            g.DrawBoard();
         }
 
         private void generate_Click(object sender, EventArgs e)
         {
+            g = g ?? panel.CreateGraphics();
             int value = ShowErrorForParsing("for number of cells", textBox1);
             if (value > 0)
             {
-                CAMethods.CreateRandomCells(value);
-                g = g ?? panel.CreateGraphics();
-                lock (g)
-                {
-                    g.DrawBoard();
-                }
+                cM.AddRandomCells(value);
+                drawer.DrawCells(g, cM.board);
             }
         }
 
@@ -216,10 +194,8 @@ namespace MultiscaleModelling
         private void panelX_TextChanged(object sender, EventArgs e)
         {
             int value = ShowErrorForParsing("for X diemension", panelX);
-            board.GetBoard().Clear();
-            board.Colors.Clear();
-            g = g ?? panel.CreateGraphics();
-            g.Clear(Color.White);
+            cM.ClearBoard();
+            drawer.MakeItWhite();
             if (value == -1)
             {
                 value = 400;
@@ -237,7 +213,11 @@ namespace MultiscaleModelling
             textBox2.Location = new Point(20 + value, textBox2.Location.Y);
             textBox3.Location = new Point(20 + value, textBox3.Location.Y);
             methods.Location = new Point(20 + value, methods.Location.Y);
-            board.SizeX = value;
+
+            g = panel.CreateGraphics();
+            g.Clear(Color.White);
+            cM.board.SizeX = value;
+            drawer.SizeX = value;
             this.Width = 200 + value;
            
         }
@@ -245,8 +225,8 @@ namespace MultiscaleModelling
         private void panelY_TextChanged(object sender, EventArgs e)
         {
             int value = ShowErrorForParsing("for Y diemension", panelY);
-            board.GetBoard().Clear();
-            board.Colors.Clear();
+            cM.ClearBoard();
+            drawer.MakeItWhite();
             g = g ?? panel.CreateGraphics();
             g.Clear(Color.White);
             if (value == -1)
@@ -254,10 +234,48 @@ namespace MultiscaleModelling
                 value = 400;
             }
             panel.Height = value;
-            if(value>400)
+            g = panel.CreateGraphics();
+            g.Clear(Color.White);
+            cM.board.SizeY = value;
+            drawer.SizeY = value;
+            if (value>400)
                 this.Height = 80 + value;
-            board.SizeY = value;
+        }
 
+        private void periodic_CheckedChanged(object sender, EventArgs e)
+        {
+            cM.IsPeriodic = periodic.Checked;
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void addIncl_Click(object sender, EventArgs e)
+        {
+            if (finish)
+            {
+                if (squareIncl.Checked)
+                {
+                    int x = ShowErrorForParsing("for length of square", textBox2);
+                    int y = ShowErrorForParsing("for height of square", textBox3);
+                    int number = ShowErrorForParsing("for number of inclusions", incNumber);
+                    cM.AddSquareInclusions(number, x,y);
+                }
+                else
+                {
+                    int radius = ShowErrorForParsing("for radius of circle", textBox2);
+                    int number = ShowErrorForParsing("for number of inclusions", incNumber);
+                    cM.AddCircleInclusions(number, radius);
+                }
+            }
+            else
+            {
+                ShowError("You can't add cells to boundries before counting is over!");
+                return;
+            }
+            drawer.DrawBoard(g,cM.board);
         }
     }
 }

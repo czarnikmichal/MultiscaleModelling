@@ -43,6 +43,9 @@
             this.panelX = new System.Windows.Forms.TextBox();
             this.panelY = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.numberOfInclusions = new System.Windows.Forms.Label();
+            this.incNumber = new System.Windows.Forms.TextBox();
+            this.addIncl = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // start
@@ -85,6 +88,7 @@
             this.periodic.Text = "Periodic Boundary Contidions";
             this.periodic.UseVisualStyleBackColor = true;
             this.periodic.UseWaitCursor = true;
+            this.periodic.CheckedChanged += new System.EventHandler(this.periodic_CheckedChanged);
             // 
             // generate
             // 
@@ -185,12 +189,42 @@
             this.label1.TabIndex = 14;
             this.label1.Text = "x";
             // 
+            // numberOfInclusions
+            // 
+            this.numberOfInclusions.AutoSize = true;
+            this.numberOfInclusions.Location = new System.Drawing.Point(417, 323);
+            this.numberOfInclusions.Name = "numberOfInclusions";
+            this.numberOfInclusions.Size = new System.Drawing.Size(105, 13);
+            this.numberOfInclusions.TabIndex = 15;
+            this.numberOfInclusions.Text = "Number of inclusions";
+            this.numberOfInclusions.Click += new System.EventHandler(this.label2_Click);
+            // 
+            // incNumber
+            // 
+            this.incNumber.Location = new System.Drawing.Point(420, 339);
+            this.incNumber.Name = "incNumber";
+            this.incNumber.Size = new System.Drawing.Size(149, 20);
+            this.incNumber.TabIndex = 16;
+            // 
+            // addIncl
+            // 
+            this.addIncl.Location = new System.Drawing.Point(419, 366);
+            this.addIncl.Name = "addIncl";
+            this.addIncl.Size = new System.Drawing.Size(150, 23);
+            this.addIncl.TabIndex = 17;
+            this.addIncl.Text = "Add Inclusions";
+            this.addIncl.UseVisualStyleBackColor = true;
+            this.addIncl.Click += new System.EventHandler(this.addIncl_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(585, 444);
+            this.Controls.Add(this.addIncl);
+            this.Controls.Add(this.incNumber);
+            this.Controls.Add(this.numberOfInclusions);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.panelY);
             this.Controls.Add(this.panelX);
@@ -231,6 +265,9 @@
         private System.Windows.Forms.TextBox panelX;
         private System.Windows.Forms.TextBox panelY;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label numberOfInclusions;
+        private System.Windows.Forms.TextBox incNumber;
+        private System.Windows.Forms.Button addIncl;
     }
 }
 
