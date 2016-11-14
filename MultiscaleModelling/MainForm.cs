@@ -89,6 +89,11 @@ namespace MultiscaleModelling
                         run = false;
                         finish = true;
                     }
+                    if (cM.BoundaryMethod != CAMethods1.BoundaryMethods.Rules)
+                    {
+                        run = false;
+                        finish = true;
+                    }
                 }
                 cM.Count();
                 drawer.DrawCells(g, cM.board);
